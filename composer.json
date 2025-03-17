@@ -1,0 +1,29 @@
+{
+    "name": "gp/validator",
+    "description": "A validator package for php web application",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Periyandavar Ganesh",
+            "email": "vickyperiyandavar@gmail.com"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Validator\\": "src//"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/",
+            "Validator\\": "src//"
+        }
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.72",
+        "phpunit/phpunit": "^9.6",
+        "phpstan/phpstan": "^2.1"
+    }
+}
