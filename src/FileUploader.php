@@ -1,8 +1,7 @@
 <?php
 
-namespace System\Library;
+namespace Validator;
 
-defined('VALID_REQ') or exit('Invalid request');
 
 trait FileUploader
 {

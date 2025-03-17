@@ -3,6 +3,7 @@
 namespace System\Library;
 
 use Iterator;
+use Validator\FileUploader;
 
 class Fields implements Iterator
 {
