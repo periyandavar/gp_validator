@@ -2,7 +2,6 @@
 
 namespace Validator;
 
-
 trait FileUploader
 {
     /**
