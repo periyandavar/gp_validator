@@ -2,7 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 
-class FieldTest extends TestCase
+class InputDataTest extends TestCase
 {
     public function testCheck()
     {
