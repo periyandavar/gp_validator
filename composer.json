@@ -9,7 +9,9 @@
             "email": "vickyperiyandavar@gmail.com"
         }
     ],
-    "require": {},
+    "require": {
+        "mockery/mockery": "^1.6"
+    },
     "autoload": {
         "psr-4": {
             "Validator\\": "src//"
