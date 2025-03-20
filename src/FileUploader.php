@@ -115,7 +115,7 @@ trait FileUploader
         ?array $file,
         string $filename,
         ?string $subfolder = null,
-        string $destination = null,
+        ?string $destination = null,
         bool $overwrite = false
     ): bool {
         if ($file == null) {

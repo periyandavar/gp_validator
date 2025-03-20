@@ -1,6 +1,6 @@
 <?php
 
-namespace System\Core;
+namespace Validator;
 
 final class InputData
 {
