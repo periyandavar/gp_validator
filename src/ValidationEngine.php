@@ -168,8 +168,8 @@ class ValidationEngine
     /**
      * Performs numeric validation and range validation
      *
-     * @param Field    $field Field
-     * @param array    $params
+     * @param Field $field  Field
+     * @param array $params
      *
      * @return bool
      */
@@ -302,18 +302,19 @@ class ValidationEngine
         if ($pass_on_fail && $field->isValid() === false) {
             return;
         }
-        
+
         if (is_string($rule) && class_exists($rule)) {
             $ruleClass = new $rule();
             var_export(['coooooooooondition' => [$ruleClass]]);
             if ($ruleClass instanceof ValidationRule) {
                 var_export(['ccccccccccccccccccccccccoooooooooooooooooooooo']);
                 $result = $this->handleValidationRule($field, $ruleClass, $params);
-                var_export(['RRRRRRRRRREEEEEEESSSSSSSS' =>$this->handleValidationRule($field, $ruleClass, $params)]);
+                var_export(['RRRRRRRRRREEEEEEESSSSSSSS' => $this->handleValidationRule($field, $ruleClass, $params)]);
+
                 return $result;
             }
         }
-        
+
         // if ($rule instanceof ValidationRule) {
         //     return $this->handleValidationRule($field, $rule, $params);
         // }
@@ -324,6 +325,7 @@ class ValidationEngine
             $ruleName = array_shift($params);
             $params = reset($params);
             var_export(['eeeexecxx' => [$ruleName, $params, $field->getName()]]);
+
             return $this->executeRule($field, $ruleName, $pass_on_fail, $params);
         }
 
@@ -346,14 +348,14 @@ class ValidationEngine
     {
         var_export(['assssssssssssssssssssssssssssssssssMMMMMMMMMMMMMM']);
         $data = $field->getData();
-        if (is_array ($params)) {
+        if (is_array($params)) {
             $data = array_merge([$data], $params);
         }
         if (! is_array($data)) {
             $data = [$data, $params];
         }
         $message = '';
-        
+
         $result = $rule->validate($data, $message);
         var_export(['handleVVVVVV0 ' => $data, $result]);
         if (! $result) {

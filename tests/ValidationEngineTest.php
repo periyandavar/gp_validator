@@ -88,7 +88,7 @@ class ValidationEngineTest extends TestCase
         $field2 = new Field('email', 'vicky@gmail.com', ['emailValidation', 'required', [CValidation::class, true], ['length', ['min' => 10, 'max' => 15]]]);
         $field3 = new Field('age', 500, ['numericValidation', [10, 100]]);
         $fields = new Fields();
-        $fields->addFields( $field1, $field2, $field3);
+        $fields->addFields($field1, $field2, $field3);
         $invalidFields = [];
         $result = $this->validationEngine->validate($fields, false, $invalidFields);
         var_export($invalidFields);
@@ -104,6 +104,7 @@ class CValidation implements ValidationRule
     public function validate($data, &$message): bool
     {
         array_shift($data);
+
         return reset($data) ;
     }
 }

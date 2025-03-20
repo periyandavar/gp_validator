@@ -3,8 +3,8 @@
 namespace Validator\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Validator\Field\Fields;
 use Validator\Field\Field;
+use Validator\Field\Fields;
 
 class FieldsTest extends TestCase
 {
