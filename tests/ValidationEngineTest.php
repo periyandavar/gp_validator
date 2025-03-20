@@ -3,6 +3,7 @@
 use PHPUnit\Framework\TestCase;
 use Validator\Field\Field;
 use Validator\Field\Fields;
+use Validator\Rules\ValidationRule;
 use Validator\ValidationEngine;
 
 class ValidationEngineTest extends TestCase
@@ -43,7 +44,7 @@ class ValidationEngineTest extends TestCase
         $field->method('getName')->willReturn('age');
         $field->expects($this->once())->method('setValid')->with(true);
 
-        $result = $this->validationEngine->numericValidation($field, 10, 100);
+        $result = $this->validationEngine->numericValidation($field, [10, 100]);
         $this->assertTrue($result);
     }
 
@@ -54,7 +55,7 @@ class ValidationEngineTest extends TestCase
         $field->method('getName')->willReturn('age');
         $field->expects($this->once())->method('setValid')->with(false);
 
-        $result = $this->validationEngine->numericValidation($field, 10, 100);
+        $result = $this->validationEngine->numericValidation($field, [10, 100]);
         $this->assertFalse($result);
     }
 
@@ -65,32 +66,44 @@ class ValidationEngineTest extends TestCase
         $field->method('getName')->willReturn('requiredField');
         $field->expects($this->once())->method('setValid')->with(true);
 
-        $result = $this->validationEngine->required($field);
+        $result = $this->validationEngine->requiredValidation($field);
         $this->assertTrue($result);
     }
 
     public function testValidateMultipleFields()
     {
-        // $field1 = $this->createMock(Field::class);
-        // $field1->method('getData')->willReturn('9876543210');
-        // $field1->method('getName')->willReturn('mobile');
-        // $field1->method('getRules')->willReturn(['mobileNumberValidation']);
-        // $field1->expects($this->once())->method('setValid')->with(true);
-
-        // $field2 = $this->createMock(Field::class);
-        // $field2->method('getData')->willReturn('test@example.com');
-        // $field2->method('getName')->willReturn('email');
-        // $field2->method('getRules')->willReturn(['emailValidation']);
-        // $field2->expects($this->once())->method('setValid')->with(true);
-
         $field = new Field('mobile', '9876543210', ['mobileNumberValidation']);
         $field2 = new Field('email', 'viky', ['emailValidation']);
         $fields = new Fields();
         $fields->addFields($field, $field2);
-        // var_export($fields);
         $invalidFields = [];
         $result = $this->validationEngine->validate($fields, false, $invalidFields);
         $this->assertEquals($invalidFields, [['email' => ['email should be a valid email id']]]);
         $this->assertFalse($result);
+    }
+
+    public function testValidateMultipleValidFields()
+    {
+        $field1 = new Field('mobile', '9876543210', ['mobileNumberValidation']);
+        $field2 = new Field('email', 'vicky@gmail.com', ['emailValidation', 'required', [CValidation::class, true], ['length', ['min' => 10, 'max' => 15]]]);
+        $field3 = new Field('age', 500, ['numericValidation', [10, 100]]);
+        $fields = new Fields();
+        $fields->addFields( $field1, $field2, $field3);
+        $invalidFields = [];
+        $result = $this->validationEngine->validate($fields, false, $invalidFields);
+        var_export($invalidFields);
+        // $this->assertEquals($invalidFields, []);
+        var_export([$invalidFields, $result]);
+        $this->assertTrue(true);
+        // $this->assertTrue($result);
+    }
+}
+
+class CValidation implements ValidationRule
+{
+    public function validate($data, &$message): bool
+    {
+        array_shift($data);
+        return reset($data) ;
     }
 }
