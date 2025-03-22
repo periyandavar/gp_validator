@@ -76,7 +76,9 @@ class Fields implements IteratorAggregate
     public function addValues(array $values)
     {
         foreach ($values as $key => $value) {
-            $this->_fields[$key]->setData($value);
+            if (isset($this->_fields[$key])) {
+                $this->_fields[$key]->setData($value);
+            }
         }
     }
 
@@ -181,14 +183,21 @@ class Fields implements IteratorAggregate
      * Change the data value for the fields
      *
      * @param string $key   field name
-     * @param string $value filed value
+     * @param mixed  $value filed value
      *
      * @return void
      */
-    public function setData(string $key, string $value)
+    public function setData(string $key, mixed $value)
     {
         if (isset($this->_fields[$key])) {
             $this->_fields[$key]->setData($value);
+        }
+    }
+
+    public function setValues($data)
+    {
+        foreach ($data as $key => $value) {
+            $this->setData($key, $value);
         }
     }
 
@@ -205,5 +214,22 @@ class Fields implements IteratorAggregate
         }
 
         return $flag;
+    }
+
+    public function getErrors()
+    {
+        $errors = [];
+        foreach ($this as $field) {
+            $errors = array_merge($errors, $field->getErrors());
+        }
+
+        return $errors;
+    }
+
+    public function getError()
+    {
+        $errors = $this->getErrors();
+
+        return reset($errors);
     }
 }
