@@ -129,12 +129,9 @@ class ValidationEngineTest extends TestCase
         $field7 = new Field('landline', '12345 123456', 'landline');
         $fields = new Fields();
         $fields->addFields($field1, $field2, $field3, $field4, $field5, $field6, $field7);
-        // $fields->addField($field5);
         $invalidFields = [];
         $result = $this->validationEngine->validate($fields, false, $invalidFields);
-        // $this->assertEquals($invalidFields, []);
-        $this->assertTrue(true);
-        // $this->assertTrue($result);
+        $this->assertTrue($result);
     }
 
     public function testValidateMultipleInValidFields()

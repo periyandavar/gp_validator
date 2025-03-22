@@ -63,19 +63,6 @@ class FieldsTest extends TestCase
         $this->assertArrayHasKey('testField', iterator_to_array($fields));
     }
 
-    // public function testAddFields()
-    // {
-    //     $field1 = new Field('testField1');
-    //     $field2 = new Field('testField2');
-    //     $fields = new Fields();
-
-    //     $fields->addFields($field1, $field2);
-
-    //     $this->assertCount(2, iterator_to_array($fields));
-    //     $this->assertArrayHasKey('testField1', iterator_to_array($fields));
-    //     $this->assertArrayHasKey('testField2', iterator_to_array($fields));
-    // }
-
     public function testRemoveFields()
     {
         $field1 = new Field('testField1');
@@ -99,20 +86,6 @@ class FieldsTest extends TestCase
         $this->assertEquals('value1', $field1->getData());
         $this->assertEquals('value2', $field2->getData());
     }
-
-    // public function testGetValues()
-    // {
-    //     $field1 = new Field('testField1');
-    //     $field2 = new Field('testField2');
-    //     $field1->setData('value1');
-    //     $field2->setData('value2');
-    //     $fields = new Fields([$field1, $field2]);
-
-    //     $values = $fields->getValues();
-
-    //     $this->assertSame(['testField1' => 'value1', 'testField2' => 'value2'], $values);
-    // }
-
     public function testAddRule()
     {
         $field1 = new Field('testField1');

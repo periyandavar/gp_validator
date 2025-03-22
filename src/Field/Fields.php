@@ -4,7 +4,6 @@ namespace Validator\Field;
 
 use ArrayIterator;
 use IteratorAggregate;
-use Validator\FileUploader;
 use Validator\Rules\ValidationRule;
 
 class Fields implements IteratorAggregate

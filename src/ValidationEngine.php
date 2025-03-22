@@ -286,9 +286,7 @@ class ValidationEngine
         if (is_string($rule) && class_exists($rule)) {
             $ruleClass = new $rule();
             if ($ruleClass instanceof ValidationRule) {
-                $result = $this->handleValidationRule($field, $ruleClass, $params);
-
-                return $result;
+                return $this->handleValidationRule($field, $ruleClass, $params);
             }
         }
 
