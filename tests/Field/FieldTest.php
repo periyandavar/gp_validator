@@ -85,6 +85,9 @@ class FieldTest extends TestCase
         $field->addError('Invalid value');
 
         $this->assertEquals(['Invalid value'], $field->getErrors());
+        $this->assertEquals('Invalid value', $field->getError());
+        $field->setErrors([]);
+        $this->assertEmpty($field->getErrors());
     }
 
     /**

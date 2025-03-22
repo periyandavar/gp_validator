@@ -9,7 +9,6 @@ use Validator\Rules\ValidationRule;
 
 class Fields implements IteratorAggregate
 {
-    use FileUploader;
     /**
      * List of fields stored in array
      *
@@ -64,9 +63,8 @@ class Fields implements IteratorAggregate
     public function removeFields(...$fields)
     {
         foreach ($fields as $field) {
-            unset($this->$fields[$field]);
+            unset($this->_fields[$field]);
         }
-        // $this->_fields = array_values($fields);
     }
 
     /**

@@ -8,23 +8,6 @@ use Validator\Rules\ValidationRule;
 
 class ValidationEngine
 {
-    /**
-     * Performs the custom validation
-     *
-     * @param Field          $field data to be validate
-     * @param ValidationRule $vr    ValidationRule Object defining custom validation
-     * @param string         $msg   where the error msg will be stored
-     *
-     * @return bool
-     */
-    public function customValidation(
-        Field $field,
-        ValidationRule $vr,
-        ?string &$msg = null
-    ): bool {
-        return $vr->validate($field, $msg);
-    }
-
     private function updateFieldStatus(bool $result, Field $field, string $message)
     {
         if ($field->isValid() === null) {
@@ -41,10 +24,11 @@ class ValidationEngine
         $backtraceMethod = $backtrace['function'] ?? null;
         $rules = $field->getRules() ?? [];
         $rule = reset($rules);
-        if ($backtraceClass) {
-            $rule = preg_replace('/Validation$/', '', $backtraceClass);
-        } elseif ($backtraceMethod) {
+        if ($backtraceMethod) {
             $rule = preg_replace('/Validation$/', '', $backtraceMethod);
+        }
+        if ($backtraceMethod == 'handleValidationRule' && $backtraceClass) {
+            $rule = preg_replace('/Validation$/', '', $backtraceClass);
         }
 
         $error = $field->getMessage($rule) ?? $message;
@@ -64,7 +48,7 @@ class ValidationEngine
      *
      * @return bool
      */
-    public function valuesInValidation(Field $field, ...$value)
+    public function valuesInValidation(Field $field, $value)
     {
         $data = $field->getData();
 
@@ -144,19 +128,19 @@ class ValidationEngine
         $isbn = $field->getData();
         $n = strlen($isbn);
         if ($n != 10) {
-            return false;
+            return $this->updateFieldStatus(false, $field, "{$field->getName()} shoule be the valid ISBN");
         }
         $sum = 0;
         for ($i = 0; $i < 9; $i++) {
             if (!is_numeric($isbn[$i])) {
-                return false;
+                return $this->updateFieldStatus(false, $field, "{$field->getName()} shoule be the valid ISBN");
             }
             $digit = (int) ($isbn[$i]);
             $sum += ($digit * (10 - $i));
         }
         $last = $isbn[9];
         if ($last != 'X' && (!is_numeric($last))) {
-            return false;
+            return $this->updateFieldStatus(false, $field, "{$field->getName()} shoule be the valid ISBN");
         }
         $sum += (($last == 'X') ? 10 : ((int) $last));
 
@@ -194,8 +178,6 @@ class ValidationEngine
             return $this->updateFieldStatus(false, $field, "{$name} should have the value maximum of $end");
         }
 
-        var_export(['numericValidatiosssssssssssssssssn' => [$field->getName(), $params, $flag]]);
-
         return $this->updateFieldStatus(true, $field, '');
     }
 
@@ -222,7 +204,7 @@ class ValidationEngine
      *
      * @return bool
      */
-    public function expressValidation(Field $field, string $expression): bool
+    public function regexValidation(Field $field, string $expression): bool
     {
         $result = preg_match($expression, $field->getData());
 
@@ -244,7 +226,6 @@ class ValidationEngine
         $data = $field->getData();
         $name = $field->getName();
         $minlength = $params['min'] ?? $params[0] ?? null;
-        var_export(['minLen' => $minlength]);
         if ($minlength != null) {
             if (strlen($data) < $minlength) {
                 return $this->updateFieldStatus(false, $field, "{$name} should have atleast {$minlength} characters");
@@ -298,33 +279,27 @@ class ValidationEngine
 
     private function executeRule(Field $field, $rule, $pass_on_fail = true, mixed $params = [])
     {
-        var_export(['eR' => [$field->getName(), $rule,'parr' => $params]]);
         if ($pass_on_fail && $field->isValid() === false) {
             return;
         }
 
         if (is_string($rule) && class_exists($rule)) {
             $ruleClass = new $rule();
-            var_export(['coooooooooondition' => [$ruleClass]]);
             if ($ruleClass instanceof ValidationRule) {
-                var_export(['ccccccccccccccccccccccccoooooooooooooooooooooo']);
                 $result = $this->handleValidationRule($field, $ruleClass, $params);
-                var_export(['RRRRRRRRRREEEEEEESSSSSSSS' => $this->handleValidationRule($field, $ruleClass, $params)]);
 
                 return $result;
             }
         }
 
-        // if ($rule instanceof ValidationRule) {
-        //     return $this->handleValidationRule($field, $rule, $params);
-        // }
+        if ($rule instanceof ValidationRule) {
+            return $this->handleValidationRule($field, $rule, $params);
+        }
 
         if (is_array($rule)) {
             $params = $rule;
-            var_export(['shhhhhh' => $params]);
             $ruleName = array_shift($params);
             $params = reset($params);
-            var_export(['eeeexecxx' => [$ruleName, $params, $field->getName()]]);
 
             return $this->executeRule($field, $ruleName, $pass_on_fail, $params);
         }
@@ -346,7 +321,6 @@ class ValidationEngine
 
     public function handleValidationRule(Field $field, ValidationRule $rule, mixed $params)
     {
-        var_export(['assssssssssssssssssssssssssssssssssMMMMMMMMMMMMMM']);
         $data = $field->getData();
         if (is_array($params)) {
             $data = array_merge([$data], $params);
@@ -357,7 +331,7 @@ class ValidationEngine
         $message = '';
 
         $result = $rule->validate($data, $message);
-        var_export(['handleVVVVVV0 ' => $data, $result]);
+
         if (! $result) {
             $field->addMessage($message);
         }
@@ -369,11 +343,8 @@ class ValidationEngine
     {
         $flag = true;
         $rules = $field->getRules();
-        var_export(['rrrrrrrrrrrrrrrrr' => $rules]);
         foreach ($rules as $rule) {
             $result = $this->executeRule($field, $rule);
-            var_export(['assssss Rule' => [$rule, $field->getName(), $field->getData(), $result, $flag]]);
-
             $flag = $flag && $result;
             if ($pass_on_fail && !$flag) {
                 return false;
