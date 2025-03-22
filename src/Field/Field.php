@@ -14,11 +14,12 @@ class Field
 
     protected $errors = [];
 
-    public function __construct($name, $data = null, $rules = [])
+    public function __construct($name, $data = null, $rules = [], array $messages = [])
     {
         $this->name = $name;
         $this->data = $data;
-        $this->rules = $rules;
+        $this->rules = (array) $rules;
+        $this->messages = $messages;
     }
 
     /**
@@ -157,7 +158,7 @@ class Field
     /**
      * Set the value of errors
      */
-    public function setPErrors($errors): self
+    public function setErrors($errors): self
     {
         $this->errors = $errors;
 
@@ -169,5 +170,10 @@ class Field
         $this->errors[] = $error;
 
         return $this;
+    }
+
+    public function getError()
+    {
+        return reset($this->errors);
     }
 }
