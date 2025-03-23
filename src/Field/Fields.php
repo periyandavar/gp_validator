@@ -13,7 +13,7 @@ class Fields implements IteratorAggregate
      *
      * @var Field[]
      */
-    private $_fields;
+    private $_fields = [];
 
     /**
      * Instantiate new Fields instance
