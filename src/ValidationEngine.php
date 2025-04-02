@@ -211,16 +211,12 @@ class ValidationEngine
         $data = $field->getData();
         $name = $field->getName();
         $minlength = $params['min'] ?? $params[0] ?? null;
-        if ($minlength != null) {
-            if (strlen($data) < $minlength) {
-                return $this->updateFieldStatus(false, $field, "{$name} should have atleast {$minlength} characters");
-            }
+        if ($minlength != null && strlen($data) < $minlength) {
+            return $this->updateFieldStatus(false, $field, "{$name} should have atleast {$minlength} characters");
         }
         $maxlength = $params['max'] ?? $params[1] ?? null;
-        if ($maxlength != null) {
-            if (strlen($data) > $maxlength) {
-                return $this->updateFieldStatus(false, $field, "{$name} should have atmost {$maxlength} characters");
-            }
+        if ($maxlength != null && strlen($data) > $maxlength) {
+            return $this->updateFieldStatus(false, $field, "{$name} should have atmost {$maxlength} characters");
         }
 
         return $this->updateFieldStatus(true, $field, '');

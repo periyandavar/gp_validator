@@ -2,6 +2,7 @@
 
 namespace Validator\Tests;
 
+use Mockery;
 use PHPUnit\Framework\TestCase;
 use Validator\Field\Field;
 use Validator\Field\Fields;
@@ -59,9 +60,15 @@ class FieldsTest extends TestCase
         $fields = new Fields();
 
         $fields->addField($field);
+        $fields->addField('testField2');
+        $fields->addField([
+            'name' => 'testField3',
+        ]);
 
-        $this->assertCount(1, iterator_to_array($fields));
+        $this->assertCount(3, iterator_to_array($fields));
         $this->assertArrayHasKey('testField', iterator_to_array($fields));
+        $this->assertArrayHasKey('testField2', iterator_to_array($fields));
+        $this->assertArrayHasKey('testField3', iterator_to_array($fields));
     }
 
     public function testRemoveFields()
@@ -158,6 +165,16 @@ class FieldsTest extends TestCase
         $this->assertSame('newValue', $field->getData());
     }
 
+    public function testSetValues()
+    {
+        $field = new Field('testField');
+        $fields = new Fields([$field]);
+
+        $fields->setValues(['testField' => 'newValue']);
+
+        $this->assertSame('newValue', $field->getData());
+    }
+
     public function testValidate()
     {
         $field1 = $this->createMock(Field::class);
@@ -169,5 +186,58 @@ class FieldsTest extends TestCase
         $fields = new Fields([$field1, $field2]);
 
         $this->assertFalse($fields->validate());
+    }
+
+    public function testGetErrors()
+    {
+        $field1 = Mockery::mock(Field::class)->makePartial();
+        $field1->setName('f1');
+        $field1->shouldReceive('getErrors')->andReturn(['field1_error']);
+        $field1->shouldReceive('isValid')->andReturn(false);
+
+        $field2 = Mockery::mock(Field::class)->makePartial();
+        $field2->setName('f2');
+        $field2->shouldReceive('getErrors')->andReturn(['field2_error']);
+        $field2->shouldReceive('isValid')->andReturn(false);
+
+        $fields = new Fields([$field1, $field2]);
+
+        $errors = $fields->getErrors();
+        $this->assertEqualsCanonicalizing(['field1_error', 'field2_error'], $errors);
+    }
+
+    public function testGetError()
+    {
+        $field1 = Mockery::mock(Field::class)->makePartial();
+        $field1->setName('f1');
+        $field1->shouldReceive('getErrors')->andReturn(['field1_error']);
+        $field1->shouldReceive('isValid')->andReturn(false);
+
+        $field2 = Mockery::mock(Field::class)->makePartial();
+        $field1->setName('f2');
+        $field2->shouldReceive('getErrors')->andReturn(['field2_error']);
+        $field2->shouldReceive('isValid')->andReturn(false);
+
+        $fields = new Fields([$field1, $field2]);
+
+        $error = $fields->getError();
+        $this->assertEquals('field1_error', $error);
+    }
+
+    public function testGetInvalidFields()
+    {
+        $field1 = Mockery::mock(Field::class)->makePartial();
+        $field1->setName('f1');
+        $field1->shouldReceive('isValid')->andReturn(false);
+
+        $field2 = Mockery::mock(Field::class)->makePartial();
+        $field2->setName('f1');
+        $field2->shouldReceive('isValid')->andReturn(true);
+
+        $fields = new Fields([$field1, $field2]);
+
+        $invalidFields = $fields->getInvalidFields();
+        $this->assertCount(1, $invalidFields);
+        $this->assertArrayHasKey('f1', $invalidFields);
     }
 }
