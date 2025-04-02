@@ -52,6 +52,7 @@ class FieldsTest extends TestCase
         $result = $fields->validate();
         $this->assertFalse($result);
     }
+
     public function testAddField()
     {
         $field = new Field('testField');
@@ -86,6 +87,7 @@ class FieldsTest extends TestCase
         $this->assertEquals('value1', $field1->getData());
         $this->assertEquals('value2', $field2->getData());
     }
+
     public function testAddRule()
     {
         $field1 = new Field('testField1');

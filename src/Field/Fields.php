@@ -149,6 +149,7 @@ class Fields implements IteratorAggregate
             unset($this->_fields[$oldName]);
         }
     }
+
     /**
      * Returns fields data values as association array
      *
@@ -231,5 +232,12 @@ class Fields implements IteratorAggregate
         $errors = $this->getErrors();
 
         return reset($errors);
+    }
+
+    public function getInvalidFields()
+    {
+        return array_filter($this->_fields, function(Field $field) {
+            return $field->isValid();
+        });
     }
 }
