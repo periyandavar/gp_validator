@@ -95,6 +95,17 @@ class ValidationEngineTest extends TestCase
         $this->assertFalse($result);
     }
 
+    public function testNumericValidationWithStr()
+    {
+        $field = $this->createMock(Field::class);
+        $field->method('getData')->willReturn('yyy');
+        $field->method('getName')->willReturn('age');
+        $field->expects($this->once())->method('setValid')->with(false);
+
+        $result = $this->validationEngine->numericValidation($field, [10, 100]);
+        $this->assertFalse($result);
+    }
+
     public function testRequiredFieldValidation()
     {
         $field = $this->createMock(Field::class);
@@ -148,8 +159,6 @@ class ValidationEngineTest extends TestCase
         $invalidFields = [];
         $result = $this->validationEngine->validate($fields, false, $invalidFields);
         $this->assertEquals('Please enter valid landline number', $field7->getError());
-        // $this->assertEquals($invalidFields, []);
-        // $this->assertTrue(true);
         $this->assertFalse($result);
     }
 }
