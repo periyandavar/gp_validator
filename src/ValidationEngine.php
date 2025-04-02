@@ -10,26 +10,11 @@ class ValidationEngine
 {
     private function updateFieldStatus(bool $result, Field $field, string $message)
     {
-        if ($field->isValid() === null) {
-            $field->setValid($result);
-        } else {
-            $flag = $field->isValid();
-            $field->setValid($flag && $result);
-        }
+        $field->setValid($field->isValid() === null ? $result : $field->isValid() && $result);
 
-        $backtrace = debug_backtrace();
-        array_shift($backtrace);
-        $backtrace = reset($backtrace);
-        $backtraceClass = $backtrace['class'] ?? null;
-        $backtraceMethod = $backtrace['function'] ?? null;
-        $rules = $field->getRules() ?? [];
-        $rule = reset($rules);
-        if ($backtraceMethod) {
-            $rule = preg_replace('/Validation$/', '', $backtraceMethod);
-        }
-        if ($backtraceMethod == 'handleValidationRule' && $backtraceClass) {
-            $rule = preg_replace('/Validation$/', '', $backtraceClass);
-        }
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1] ?? [];
+        $rule = preg_replace('/Validation$/', '', $backtrace['function'] ?? $backtrace['class'] ?? '');
+        $rule = $backtrace['function'] === 'handleValidationRule' ? preg_replace('/Validation$/', '', $backtrace['class'] ?? '') : $rule;
 
         $error = $field->getMessage($rule) ?? $message;
 
@@ -132,14 +117,14 @@ class ValidationEngine
         }
         $sum = 0;
         for ($i = 0; $i < 9; $i++) {
-            if (!is_numeric($isbn[$i])) {
+            if (! is_numeric($isbn[$i])) {
                 return $this->updateFieldStatus(false, $field, "{$field->getName()} shoule be the valid ISBN");
             }
             $digit = (int) ($isbn[$i]);
             $sum += ($digit * (10 - $i));
         }
         $last = $isbn[9];
-        if ($last != 'X' && (!is_numeric($last))) {
+        if ($last != 'X' && (! is_numeric($last))) {
             return $this->updateFieldStatus(false, $field, "{$field->getName()} shoule be the valid ISBN");
         }
         $sum += (($last == 'X') ? 10 : ((int) $last));
@@ -165,7 +150,7 @@ class ValidationEngine
         $flag = is_numeric($data);
         $name = $field->getName();
 
-        if (!$flag) {
+        if (! $flag) {
             return $this->updateFieldStatus($flag, $field, "{$name} should be valid number");
         }
         $start = $params['min'] ?? $params[0] ?? null;
@@ -344,7 +329,7 @@ class ValidationEngine
         foreach ($rules as $rule) {
             $result = $this->executeRule($field, $rule);
             $flag = $flag && $result;
-            if ($pass_on_fail && !$flag) {
+            if ($pass_on_fail && ! $flag) {
                 return false;
             }
         }
