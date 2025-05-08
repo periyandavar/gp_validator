@@ -4,40 +4,33 @@ namespace Validator;
 
 use Validator\Field\Field;
 use Validator\Field\Fields;
+use Validator\Rules\BaseValidator;
 use Validator\Rules\ValidationRule;
 
 class ValidationEngine
 {
     private function updateFieldStatus(bool $result, Field $field, string $message)
     {
-        if ($field->isValid() === null) {
-            $field->setValid($result);
-        } else {
-            $flag = $field->isValid();
-            $field->setValid($flag && $result);
-        }
+        $field->setValid($field->isValid() === null ? $result : $field->isValid() && $result);
 
-        $backtrace = debug_backtrace();
-        array_shift($backtrace);
-        $backtrace = reset($backtrace);
-        $backtraceClass = $backtrace['class'] ?? null;
-        $backtraceMethod = $backtrace['function'] ?? null;
-        $rules = $field->getRules() ?? [];
-        $rule = reset($rules);
-        if ($backtraceMethod) {
-            $rule = preg_replace('/Validation$/', '', $backtraceMethod);
-        }
-        if ($backtraceMethod == 'handleValidationRule' && $backtraceClass) {
-            $rule = preg_replace('/Validation$/', '', $backtraceClass);
-        }
-
-        $error = $field->getMessage($rule) ?? $message;
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1] ?? [];
+        $rule = preg_replace('/Validation$/', '', $backtrace['function'] ?? $backtrace['class'] ?? '');
+        $rule = $backtrace['function'] === 'handleVrRule' ? preg_replace('/Validation$/', '', $backtrace['class'] ?? '') : $rule;
 
         if (! $result) {
+            $error = $field->getMessage($rule) ?? $message;
             $field->addError($error);
         }
 
         return $result;
+    }
+
+    public function urlValidation(Field $field): bool
+    {
+        $data = $field->getData();
+        $result = filter_var($data, FILTER_VALIDATE_URL);
+
+        return $this->updateFieldStatus($result, $field, "{$field->getName()} should be a valid URL");
     }
 
     /**
@@ -51,8 +44,26 @@ class ValidationEngine
     public function valuesInValidation(Field $field, $value)
     {
         $data = $field->getData();
+        $value = is_array($value) ? $value : [$value];
 
-        return $this->updateFieldStatus(in_array($data, $value), $field, "{$field->getName()} should have only these possible values [" . implode($value) . ']');
+        return $this->updateFieldStatus(in_array($data, $value), $field, "{$field->getName()} should have only these possible values [" . implode(', ', $value) . ']');
+    }
+
+    /**
+     * Check whether the values are in the given set of values
+     *
+     * @param Field $field    Field
+     * @param mixed ...$value values set
+     *
+     * @return bool
+     */
+    public function valuesNotInValidation(Field $field, $value)
+    {
+        $data = $field->getData();
+
+        $value = is_array($value) ? $value : [$value];
+
+        return $this->updateFieldStatus(! in_array($data, $value), $field, "{$field->getName()} should not have only these values [" . implode(', ', $value) . ']');
     }
 
     /**
@@ -98,6 +109,34 @@ class ValidationEngine
     }
 
     /**
+     * Performs alpha and space validation
+     *
+     * @param Field $field
+     *
+     * @return bool
+     */
+    public function alphaNumericValidation(Field $field): bool
+    {
+        $data = $field->getData();
+
+        return $this->updateFieldStatus(preg_match('/^[a-zA-Z0-9]+$/', $data), $field, "{$field->getName()} should be alphanumeric");
+    }
+
+    /**
+     * Performs alpha validation
+     *
+     * @param Field $field
+     *
+     * @return bool
+     */
+    public function alphaValidation(Field $field): bool
+    {
+        $data = $field->getData();
+
+        return $this->updateFieldStatus(preg_match('/^[A-Za-z]*$/', $data), $field, "{$field->getName()} should be alphabetic");
+    }
+
+    /**
      * Performs email validation
      *
      * @param Field $field
@@ -123,62 +162,91 @@ class ValidationEngine
      *
      * @return bool
      */
-    public function isbnValidation(Field $field): bool
+    public function isbnValidation(Field $field)
     {
+        // Remove any non-digit characters (except for 'X' in ISBN-10)
         $isbn = $field->getData();
-        $n = strlen($isbn);
-        if ($n != 10) {
-            return $this->updateFieldStatus(false, $field, "{$field->getName()} shoule be the valid ISBN");
-        }
-        $sum = 0;
-        for ($i = 0; $i < 9; $i++) {
-            if (!is_numeric($isbn[$i])) {
-                return $this->updateFieldStatus(false, $field, "{$field->getName()} shoule be the valid ISBN");
-            }
-            $digit = (int) ($isbn[$i]);
-            $sum += ($digit * (10 - $i));
-        }
-        $last = $isbn[9];
-        if ($last != 'X' && (!is_numeric($last))) {
-            return $this->updateFieldStatus(false, $field, "{$field->getName()} shoule be the valid ISBN");
-        }
-        $sum += (($last == 'X') ? 10 : ((int) $last));
+        $isbn = preg_replace('/[^0-9X]/i', '', $isbn);
 
-        $result = ($sum % 11 == 0);
+        // Check for ISBN-10
+        if (strlen($isbn) === 10) {
+            return $this->isbn10Validation($field);
+        }
 
-        return $this->updateFieldStatus($result, $field, "{$field->getName()} shoule be the valid ISBN");
+        // Check for ISBN-13
+        if (strlen($isbn) === 13) {
+            return $this->isbn13Validation($field);
+        }
+
+        return $this->updateFieldStatus(false, $field, "{$field->getName()} shoule be the valid ISBN"); // Invalid length
     }
 
     /**
-     * Performs numeric validation and range validation
+     * Isbn10 Validation
      *
-     * @param Field $field  Field
-     * @param array $params
+     * @param Field $field
      *
      * @return bool
      */
-    public function numericValidation(
-        Field $field,
-        array $params
-    ): bool {
-        $data = $field->getData();
-        $flag = is_numeric($data);
-        $name = $field->getName();
+    public function isbn10Validation(Field $field)
+    {
+        $isbn = $field->getData();
+        $isbn = preg_replace('/[^0-9X]/i', '', $isbn);
 
-        if (!$flag) {
-            return $this->updateFieldStatus($flag, $field, "{$name} should be valid number");
-        }
-        $start = $params['min'] ?? $params[0] ?? null;
-        if (isset($start) && (int) $data < $start) {
-            return $this->updateFieldStatus(false, $field, "{$name} should have the value minimum of $start");
+        if (strlen($isbn) !== 10) {
+            return $this->updateFieldStatus(false, $field, "{$field->getName()} shoule be the valid ISBN"); // Invalid length
         }
 
-        $end = $params['max'] ?? $params[1] ?? null;
-        if (isset($end) && (int) $data > $end) {
-            return $this->updateFieldStatus(false, $field, "{$name} should have the value maximum of $end");
+        $sum = 0;
+
+        for ($i = 0; $i < 9; $i++) {
+            if (! is_numeric($isbn[$i])) {
+                return $this->updateFieldStatus(false, $field, "{$field->getName()} shoule be the valid ISBN"); // Invalid character
+            }
+            $sum += ($i + 1) * (int) $isbn[$i];
         }
 
-        return $this->updateFieldStatus(true, $field, '');
+        // Check the last character
+        $lastChar = strtoupper($isbn[9]);
+        if ($lastChar === 'X') {
+            $sum += 10 * 10; // 'X' counts as 10
+        } else {
+            $sum += 10 * (int) $lastChar;
+        }
+
+        return $this->updateFieldStatus($sum % 11 === 0, $field, "{$field->getName()} shoule be the valid ISBN");// Valid if sum is divisible by 11
+    }
+
+    /**
+     * Isbn13 Validation
+     *
+     * @param Field $field
+     *
+     * @return bool
+     */
+    public function isbn13Validation(Field $field)
+    {
+        $isbn = $field->getData();
+
+        $isbn = preg_replace('/[^0-9X]/i', '', $isbn);
+
+        if (strlen($isbn) !== 13) {
+            return $this->updateFieldStatus(false, $field, "{$field->getName()} shoule be the valid ISBN"); // Invalid length
+        }
+
+        $sum = 0;
+
+        for ($i = 0; $i < 12; $i++) {
+            if (! is_numeric($isbn[$i])) {
+                return $this->updateFieldStatus(false, $field, "{$field->getName()} shoule be the valid ISBN");
+            }
+            $sum += (int) $isbn[$i] * (($i % 2 === 0) ? 1 : 3);
+        }
+
+        $lastDigit = (int) $isbn[12];
+        $checkDigit = (10 - ($sum % 10)) % 10;
+
+        return $this->updateFieldStatus($checkDigit === $lastDigit, $field, "{$field->getName()} shoule be the valid ISBN");
     }
 
     /**
@@ -212,36 +280,6 @@ class ValidationEngine
     }
 
     /**
-     * Validates the length
-     *
-     * @param Field $field
-     * @param array $params
-     *
-     * @return bool
-     */
-    public function lengthValidation(
-        Field $field,
-        array $params = []
-    ): bool {
-        $data = $field->getData();
-        $name = $field->getName();
-        $minlength = $params['min'] ?? $params[0] ?? null;
-        if ($minlength != null) {
-            if (strlen($data) < $minlength) {
-                return $this->updateFieldStatus(false, $field, "{$name} should have atleast {$minlength} characters");
-            }
-        }
-        $maxlength = $params['max'] ?? $params[1] ?? null;
-        if ($maxlength != null) {
-            if (strlen($data) > $maxlength) {
-                return $this->updateFieldStatus(false, $field, "{$name} should have atmost {$maxlength} characters");
-            }
-        }
-
-        return $this->updateFieldStatus(true, $field, '');
-    }
-
-    /**
      * Required fields validation
      *
      * @param Field $field
@@ -272,26 +310,87 @@ class ValidationEngine
             if (! $field->isValid()) {
                 $invalidFieldDetails[] = [$field->getName() => $field->getErrors()];
             }
+            if ($pass_on_fail && ! $result) {
+                return $flag;
+            }
         }
 
         return $flag;
     }
 
-    private function executeRule(Field $field, $rule, $pass_on_fail = true, mixed $params = [])
+    public function handleBuildInValidator(Field $field, string $rule, $params = [])
     {
-        if ($pass_on_fail && $field->isValid() === false) {
-            return;
-        }
+        $rule = preg_replace('/Validation$/', '', $rule);
+        if (ValidationConstants::isMethodValidator($rule)) {
+            $rule = $rule . 'Validation';
+            if (method_exists($this, $rule)) {
+                if (! empty($params)) {
+                    return $this->$rule($field, $params);
+                }
 
-        if (is_string($rule) && class_exists($rule)) {
-            $ruleClass = new $rule();
-            if ($ruleClass instanceof ValidationRule) {
-                return $this->handleValidationRule($field, $ruleClass, $params);
+                return $this->$rule($field);
             }
         }
 
+        $vr = ValidationConstants::getVrObject($rule, $params);
+
+        return $this->handleVrRule($field, $vr);
+    }
+
+    private function handleVrRule(Field $field, ValidationRule $vr)
+    {
+        if ($vr instanceof BaseValidator) {
+            $result = $vr->validate($field);
+
+            return $this->updateFieldStatus($result, $field, $vr->getError() ?? $field->getRuleMessage($vr->getName()));
+        }
+
+        $result = $vr->validate($field);
+
+        return $this->updateFieldStatus($result, $field, $field->getMessage($vr->getName()) ?? 'Invalid value');
+    }
+
+    private function handleStringTypeRule(Field $field, string $rule, $params = [], $pass_on_fail = true)
+    {
+        if (ValidationConstants::isBuildInValidator($rule)) {
+            return $this->handleBuildInValidator($field, $rule, $params);
+        }
+
+        if (ValidationConstants::isDerivedValidator($rule)) {
+            $rule = ValidationConstants::getDerivedRule($rule);
+
+            return $this->handleVrRule($field, $rule);
+        }
+        $params = is_array($params) ? $params : [$params];
+        if (class_exists($rule)) {
+            $ruleClass = ValidationConstants::getValidationObj($rule, $params);
+            if ($ruleClass instanceof ValidationRule) {
+                return $this->handleVrRule($field, $ruleClass);
+            }
+        }
+
+        $params1 = explode(' ', $rule);
+        $rule1 = array_shift($params1);
+        if ($rule === $rule1) {
+            throw new \Exception("Invalid rule: {$rule}");
+        }
+        $params = array_merge($params1, $params);
+
+        return $this->executeRule($field, $rule1, $pass_on_fail, $params);
+    }
+
+    public function executeRule(Field $field, $rule, $pass_on_fail = true, mixed $params = [])
+    {
+        if ($pass_on_fail && $field->isValid() === false) {
+            return false;
+        }
+
+        if (is_string($rule)) {
+            return $this->handleStringTypeRule($field, $rule, $params, $pass_on_fail);
+        }
+
         if ($rule instanceof ValidationRule) {
-            return $this->handleValidationRule($field, $rule, $params);
+            return $this->handleVrRule($field, $rule);
         }
 
         if (is_array($rule)) {
@@ -301,50 +400,17 @@ class ValidationEngine
 
             return $this->executeRule($field, $ruleName, $pass_on_fail, $params);
         }
-
-        $params1 = explode(' ', $rule);
-        $rule = array_shift($params1);
-        if (is_array($params)) {
-            $params = array_merge($params1, $params);
-        } else {
-            $params1[] = array_merge($params1, [$params]);
-        }
-        $rule = $rule = preg_replace('/Validation$/', '', $rule) . 'Validation';
-        if (method_exists($this, $rule)) {
-            return call_user_func([$this, $rule], $field, $params);
-        }
-
-        return false;
-    }
-
-    public function handleValidationRule(Field $field, ValidationRule $rule, mixed $params)
-    {
-        $data = $field->getData();
-        if (is_array($params)) {
-            $data = array_merge([$data], $params);
-        }
-        if (! is_array($data)) {
-            $data = [$data, $params];
-        }
-        $message = '';
-
-        $result = $rule->validate($data, $message);
-
-        if (! $result) {
-            $field->addMessage($message);
-        }
-
-        return $this->updateFieldStatus($result, $field, $message);
     }
 
     public function validateField(Field $field, $pass_on_fail = true): bool
     {
         $flag = true;
         $rules = $field->getRules();
+
         foreach ($rules as $rule) {
-            $result = $this->executeRule($field, $rule);
+            $result = $this->executeRule($field, $rule, $pass_on_fail);
             $flag = $flag && $result;
-            if ($pass_on_fail && !$flag) {
+            if ($pass_on_fail && ! $flag) {
                 return false;
             }
         }
@@ -352,6 +418,8 @@ class ValidationEngine
             return $flag;
         }
 
-        return false;
+        $field->setValid(true);
+
+        return $flag;
     }
 }

@@ -23,6 +23,13 @@ class FieldsTest extends TestCase
         $this->assertCount(2, $fields->getValues());
     }
 
+    public function testAddFieldWithStr()
+    {
+        $fields = new Fields();
+        $fields->addField('test');
+        $this->assertCount(1, $fields->getValues());
+    }
+
     public function testGetValues()
     {
         $field1 = $this->createMock(Field::class);
@@ -52,6 +59,7 @@ class FieldsTest extends TestCase
         $result = $fields->validate();
         $this->assertFalse($result);
     }
+
     public function testAddField()
     {
         $field = new Field('testField');
@@ -81,11 +89,12 @@ class FieldsTest extends TestCase
         $field2 = new Field('testField2');
         $fields = new Fields([$field1, $field2]);
 
-        $fields->addValues(['testField1' => 'value1', 'testField2' => 'value2']);
+        $fields->setValues(['testField1' => 'value1', 'testField2' => 'value2']);
 
         $this->assertEquals('value1', $field1->getData());
         $this->assertEquals('value2', $field2->getData());
     }
+
     public function testAddRule()
     {
         $field1 = new Field('testField1');
@@ -167,5 +176,24 @@ class FieldsTest extends TestCase
         $fields = new Fields([$field1, $field2]);
 
         $this->assertFalse($fields->validate());
+    }
+
+    public function testInvalidFields()
+    {
+        $field1 = new Field('f1', '1');
+        $field2 = new Field('f2', '2');
+        $field1->setErrors(['error1']);
+        $field1->setValid(false);
+        $field1->addError('error2');
+        $field2->setWarnings(['warning1']);
+        $field2->addWarning('warning2');
+        $field2->setValid(true);
+        $fields = new Fields([$field1, $field2]);
+        $this->assertEquals($fields->getValidFields(), [$field2->getName() => $field2]);
+        $this->assertEquals($fields->getInvalidFields(), [$field1->getName() => $field1]);
+        $this->assertEquals($fields->getWarnings(), ['warning1', 'warning2']);
+        $this->assertEquals($fields->getErrors(), ['error1', 'error2']);
+        $this->assertEquals($fields->getWarning(), 'warning1');
+        $this->assertEquals($fields->getError(), 'error1');
     }
 }
