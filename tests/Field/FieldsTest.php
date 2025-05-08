@@ -2,6 +2,7 @@
 
 namespace Validator\Tests;
 
+use Mockery;
 use PHPUnit\Framework\TestCase;
 use Validator\Field\Field;
 use Validator\Field\Fields;
@@ -60,15 +61,22 @@ class FieldsTest extends TestCase
         $this->assertFalse($result);
     }
 
+
     public function testAddField()
     {
         $field = new Field('testField');
         $fields = new Fields();
 
         $fields->addField($field);
+        $fields->addField('testField2');
+        $fields->addField([
+            'name' => 'testField3',
+        ]);
 
-        $this->assertCount(1, iterator_to_array($fields));
+        $this->assertCount(3, iterator_to_array($fields));
         $this->assertArrayHasKey('testField', iterator_to_array($fields));
+        $this->assertArrayHasKey('testField2', iterator_to_array($fields));
+        $this->assertArrayHasKey('testField3', iterator_to_array($fields));
     }
 
     public function testRemoveFields()
@@ -94,6 +102,7 @@ class FieldsTest extends TestCase
         $this->assertEquals('value1', $field1->getData());
         $this->assertEquals('value2', $field2->getData());
     }
+
 
     public function testAddRule()
     {
@@ -161,6 +170,16 @@ class FieldsTest extends TestCase
         $fields = new Fields([$field]);
 
         $fields->setData('testField', 'newValue');
+
+        $this->assertSame('newValue', $field->getData());
+    }
+
+    public function testSetValues()
+    {
+        $field = new Field('testField');
+        $fields = new Fields([$field]);
+
+        $fields->setValues(['testField' => 'newValue']);
 
         $this->assertSame('newValue', $field->getData());
     }

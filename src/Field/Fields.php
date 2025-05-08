@@ -13,7 +13,7 @@ class Fields implements IteratorAggregate
      *
      * @var Field[]
      */
-    private $_fields = [];
+    private $fields = [];
 
     /**
      * Instantiate new Fields instance
@@ -27,15 +27,37 @@ class Fields implements IteratorAggregate
         }
     }
 
+    /**
+     * Add a field
+     *
+     * @param Field|array|string $field
+     *
+     * Support values for tha param
+     * array as ['name' => $name, 'data' => null, 'rules' => [], 'messages' => []]
+     * name is required key in the array
+     * else only name
+     *
+     * @return void
+     */
     public function addField($field)
     {
         if ($field instanceof Field) {
-            $this->_fields[$field->getName()] = $field;
+            $this->fields[$field->getName()] = $field;
 
             return;
         }
 
-        $this->_fields[$field] = new Field($field);
+        if (is_array($field) && isset($field['name'])) {
+            $name = $field['name'];
+            $data = $field['data'] ?? null;
+            $rules = $field['rules'] ?? [];
+            $messages = $field['messages'] ?? [];
+            $this->fields[$name] = new Field($name, $data, $rules, $messages);
+
+            return;
+        }
+
+        $this->fields[$field] = new Field($field);
     }
 
     /**
@@ -62,7 +84,7 @@ class Fields implements IteratorAggregate
     public function removeFields(...$fields)
     {
         foreach ($fields as $field) {
-            unset($this->_fields[$field]);
+            unset($this->fields[$field]);
         }
     }
 
@@ -74,7 +96,7 @@ class Fields implements IteratorAggregate
     public function getValues()
     {
         $values = [];
-        foreach ($this->_fields as $value) {
+        foreach ($this->fields as $value) {
             $values[$value->getName()] = $value->getData();
         }
 
@@ -91,11 +113,11 @@ class Fields implements IteratorAggregate
     public function addRule(array $fieldsRules)
     {
         foreach ($fieldsRules as $key => $values) {
-            if (isset($this->_fields[$key])) {
+            if (isset($this->fields[$key])) {
                 if (is_array($values)) {
-                    $this->_fields[$key]->addRules($values);
+                    $this->fields[$key]->addRules($values);
                 } else {
-                    $this->_fields[$key]->addRule($values);
+                    $this->fields[$key]->addRule($values);
                 }
             }
         }
@@ -111,8 +133,8 @@ class Fields implements IteratorAggregate
     public function setRequiredFields(...$fields)
     {
         foreach ($fields as $field) {
-            if (isset($this->_fields[$field])) {
-                $this->_fields[$field]->addRule('required');
+            if (isset($this->fields[$field])) {
+                $this->fields[$field]->addRule('required');
             }
         }
     }
@@ -127,12 +149,13 @@ class Fields implements IteratorAggregate
      */
     public function renameFieldName(string $oldName, string $newName)
     {
-        if (array_key_exists($oldName, $this->_fields)) {
-            $this->_fields[$oldName]->setName($newName);
-            $this->_fields[$newName] = $this->_fields[$oldName];
-            unset($this->_fields[$oldName]);
+        if (array_key_exists($oldName, $this->fields)) {
+            $this->fields[$oldName]->setName($newName);
+            $this->fields[$newName] = $this->fields[$oldName];
+            unset($this->fields[$oldName]);
         }
     }
+
 
     /**
      * Returns fields data values as association array
@@ -142,7 +165,7 @@ class Fields implements IteratorAggregate
     public function getData(): array
     {
         $fieldsData = [];
-        foreach ($this->_fields as $key => $value) {
+        foreach ($this->fields as $key => $value) {
             $fieldsData[$key] = $value->getData();
         }
 
@@ -159,8 +182,8 @@ class Fields implements IteratorAggregate
      */
     public function addCustomeRule(string $field, ValidationRule $vr)
     {
-        if (isset($this->_fields[$field])) {
-            $this->_fields[$field]->addRule($vr);
+        if (isset($this->fields[$field])) {
+            $this->fields[$field]->addRule($vr);
         }
     }
 
@@ -174,44 +197,71 @@ class Fields implements IteratorAggregate
      */
     public function setData(string $key, mixed $value)
     {
-        if (isset($this->_fields[$key])) {
-            $this->_fields[$key]->setData($value);
+        if (isset($this->fields[$key])) {
+            $this->fields[$key]->setData($value);
         }
     }
 
-    public function setValues($data)
+    /**
+     * Set the values
+     *
+     * @param array $data
+     *
+     * @return void
+     */
+    public function setValues(array $data)
     {
         foreach ($data as $key => $value) {
             $this->setData($key, $value);
         }
     }
 
+    /**
+     * Return the iterator object.
+     *
+     * @return ArrayIterator
+     */
     public function getIterator(): ArrayIterator
     {
-        return new ArrayIterator($this->_fields);
+        return new ArrayIterator($this->fields);
     }
 
+    /**
+     * Validates the field.
+     *
+     * @return bool
+     */
     public function validate(): bool
     {
         $flag = true;
-        foreach ($this->_fields as $field) {
+        foreach ($this->fields as $field) {
             $flag = $field->validate() && $flag;
         }
 
         return $flag;
     }
 
-    public function getErrors()
+    /**
+     * Get the error messages.
+     *
+     * @return array
+     */
+    public function getErrors(): array
     {
         $errors = [];
-        foreach ($this as $field) {
+        foreach ($this->fields as $field) {
             $errors = array_merge($errors, $field->getErrors());
         }
 
         return $errors;
     }
 
-    public function getError()
+    /**
+     * Return a single error message.
+     *
+     * @return string
+     */
+    public function getError(): string
     {
         $errors = $this->getErrors();
 
