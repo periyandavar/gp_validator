@@ -66,9 +66,9 @@ class FieldTest extends TestCase
     public function testAddMessage()
     {
         $field = new Field('testField');
-        $field->addMessage('This field is required');
+        $field->addMessage('required', 'This field is required');
 
-        $this->assertEquals(['This field is required'], $field->getMessages());
+        $this->assertEquals(['required' => 'This field is required'], $field->getMessages());
     }
 
     public function testIsValidAndSetValid()
@@ -83,11 +83,27 @@ class FieldTest extends TestCase
     {
         $field = new Field('testField');
         $field->addError('Invalid value');
+        $field->addWarning('Warning value');
 
         $this->assertEquals(['Invalid value'], $field->getErrors());
         $this->assertEquals('Invalid value', $field->getError());
         $field->setErrors([]);
+        $this->assertEquals($field->getWarning(), 'Warning value');
         $this->assertEmpty($field->getErrors());
+    }
+
+    public function testAddRuleMessage()
+    {
+        $field = new Field('testField');
+        $msg = 'This field must be numeric and less than {max}';
+        $field1 = new Field('testField2');
+        $field3 = new Field('testField3');
+        $field3->addMessage('numeric', 'Invalid Number');
+        $field->addRuleMessage('numeric', 'max', $msg);
+        $this->assertEquals($msg, $field->getRuleMessage('numeric', 'max'));
+        $this->assertEquals($msg, $field->getRuleMessage('numeric'));
+        $this->assertNull($field1->getRuleMessage('numeric', 'max'));
+        $this->assertEquals('Invalid Number', $field3->getRuleMessage('numeric', 'max'));
     }
 
     /**

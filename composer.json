@@ -11,7 +11,8 @@
     ],
     "require": {
         "php": "^8.0",
-        "mockery/mockery": "^1.6"
+        "mockery/mockery": "^1.6",
+        "gp/loader": "^1.2"
     },
     "autoload": {
         "psr-4": {

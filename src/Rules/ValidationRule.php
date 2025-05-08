@@ -2,15 +2,18 @@
 
 namespace Validator\Rules;
 
+use Validator\Field\Field;
+
 interface ValidationRule
 {
     /**
-     * Custom validation
+     * Validation Rule
      *
-     * @param mixed  $data Data to be validated
-     * @param string $msg  String reference where the message will be stored
+     * @param Field $field Field to be validated
      *
-     * @return bool|null
+     * @return bool
      */
-    public function validate(mixed $data, string &$msg): ?bool;
+    public function validate(Field $field): bool;
+
+    public static function getName(): string;
 }

@@ -13,6 +13,7 @@ class Field
     protected ?bool $valid = null;
 
     protected $errors = [];
+    protected $warnings = [];
 
     public function __construct($name, $data = null, $rules = [], array $messages = [])
     {
@@ -89,6 +90,27 @@ class Field
         return $this->getMessages()[$rule] ?? null;
     }
 
+    public function getRuleMessage(string $rule, ?string $subrule = null)
+    {
+        $messages = $this->getMessage($rule);
+
+        if (empty($messages)) {
+            return null;
+        }
+
+        if (! is_array($messages)) {
+            return $messages;
+        }
+
+        $message = $messages['default'] ?? $messages[$rule] ?? reset($messages);
+
+        if (empty($subrule)) {
+            return $message;
+        }
+
+        return $messages[$subrule] ?? $message;
+    }
+
     /**
      * Set the value of messages
      */
@@ -104,9 +126,16 @@ class Field
         $this->rules[] = $rule;
     }
 
-    public function addMessage($message)
+    public function addMessage(string $rule, $message)
     {
-        $this->messages[] = $message;
+        $this->messages[$rule] = $message;
+    }
+
+    public function addRuleMessage(string $rule, string $subrule, string $message)
+    {
+        $messages = [$subrule => $message];
+
+        $this->addMessage($rule, $messages);
     }
 
     public function addRules(array $rules)
@@ -175,5 +204,35 @@ class Field
     public function getError()
     {
         return reset($this->errors);
+    }
+
+    /**
+     * Get the value of warnings
+     */
+    public function getWarnings()
+    {
+        return $this->warnings;
+    }
+
+    /**
+     * Set the value of warnings
+     */
+    public function setWarnings($warnings): self
+    {
+        $this->warnings = $warnings;
+
+        return $this;
+    }
+
+    public function addWarning($warning)
+    {
+        $this->warnings[] = $warning;
+
+        return $this;
+    }
+
+    public function getWarning()
+    {
+        return reset($this->warnings);
     }
 }

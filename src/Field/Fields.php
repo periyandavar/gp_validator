@@ -89,22 +89,6 @@ class Fields implements IteratorAggregate
     }
 
     /**
-     * Populates the values to fields
-     *
-     * @param array $values Values for the fields
-     *
-     * @return void
-     */
-    public function addValues(array $values)
-    {
-        foreach ($values as $key => $value) {
-            if (isset($this->fields[$key])) {
-                $this->fields[$key]->setData($value);
-            }
-        }
-    }
-
-    /**
      * Returns the fields with their values as array
      *
      * @return array
@@ -283,15 +267,39 @@ class Fields implements IteratorAggregate
         return reset($errors);
     }
 
-    /**
-     * Return the array of invalid fields
-     *
-     * @return array
-     */
-    public function getInvalidFields(): array
+    public function getWarnings()
+    {
+        $warnings = [];
+        foreach ($this as $field) {
+            $warnings = array_merge($warnings, $field->getWarnings());
+        }
+
+        return $warnings;
+    }
+
+    public function getWarning()
+    {
+        $warnings = $this->getWarnings();
+
+        return reset($warnings);
+    }
+
+    public function getInvalidFields()
     {
         return array_filter($this->fields, function(Field $field) {
-            return $field->isValid();
+            return ! $field->isValid();
         });
+    }
+
+    public function getValidFields()
+    {
+        return array_filter($this->fields, function(Field $field) {
+            return $field->isValid() === true;
+        });
+    }
+
+    public function getFields()
+    {
+        return array_keys($this->fields);
     }
 }
