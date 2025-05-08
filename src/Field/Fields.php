@@ -156,7 +156,6 @@ class Fields implements IteratorAggregate
         }
     }
 
-
     /**
      * Returns fields data values as association array
      *
@@ -287,20 +286,20 @@ class Fields implements IteratorAggregate
 
     public function getInvalidFields()
     {
-        return array_filter($this->_fields, function(Field $field) {
+        return array_filter($this->fields, function(Field $field) {
             return ! $field->isValid();
         });
     }
 
     public function getValidFields()
     {
-        return array_filter($this->_fields, function(Field $field) {
+        return array_filter($this->fields, function(Field $field) {
             return $field->isValid() === true;
         });
     }
 
     public function getFields()
     {
-        return array_keys($this->_fields);
+        return array_keys($this->fields);
     }
 }

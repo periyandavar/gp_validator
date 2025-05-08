@@ -26,8 +26,6 @@ class ValidationEngineTest extends TestCase
         $field->expects($this->any())
             ->method('getData')
             ->willReturn('123-4-56-789012-3'); // Invalid ISBN
-            ->method('getData')
-            ->willReturn('123-4-56-789012-3'); // Invalid ISBN
 
         $result = $this->validationEngine->isbnValidation($field);
         $this->assertFalse($result);
@@ -39,13 +37,9 @@ class ValidationEngineTest extends TestCase
         $field->expects($this->any())
             ->method('getData')
             ->willReturn('12345');
-            ->method('getData')
-            ->willReturn('12345');
 
         // Test valid length
         $field->expects($this->any())
-            ->method('getRules')
-            ->willReturn(['length', [5]]);
             ->method('getRules')
             ->willReturn(['length', [5]]);
 
@@ -55,8 +49,6 @@ class ValidationEngineTest extends TestCase
 
         // Test invalid length
         $field->expects($this->any())
-            ->method('getRules')
-            ->willReturn(['length', ['10']]);
             ->method('getRules')
             ->willReturn(['length', ['10']]);
 

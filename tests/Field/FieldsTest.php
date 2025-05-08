@@ -2,7 +2,6 @@
 
 namespace Validator\Tests;
 
-use Mockery;
 use PHPUnit\Framework\TestCase;
 use Validator\Field\Field;
 use Validator\Field\Fields;
@@ -61,7 +60,6 @@ class FieldsTest extends TestCase
         $this->assertFalse($result);
     }
 
-
     public function testAddField()
     {
         $field = new Field('testField');
@@ -102,7 +100,6 @@ class FieldsTest extends TestCase
         $this->assertEquals('value1', $field1->getData());
         $this->assertEquals('value2', $field2->getData());
     }
-
 
     public function testAddRule()
     {
