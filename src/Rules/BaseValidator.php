@@ -8,7 +8,7 @@ abstract class BaseValidator implements ValidationRule
 {
     protected array $messages = [];
 
-    private $err_msg = '';
+    private $errorMsg = '';
 
     public function getErrorMessage(?string $key = null)
     {
@@ -26,13 +26,13 @@ abstract class BaseValidator implements ValidationRule
 
     public function getError()
     {
-        return $this->frameErrorMessage($this->err_msg ?? $this->getErrorMessage());
+        return $this->frameErrorMessage($this->errorMsg ?? $this->getErrorMessage());
     }
 
     public function setErrorMessage(Field $field, ?string $subRule = null)
     {
         $name = $this->getName();
-        $this->err_msg = $field->getRuleMessage($name) ?? $this->getErrorMessage($subRule);
+        $this->errorMsg = $field->getRuleMessage($name) ?? $this->getErrorMessage($subRule);
     }
 
     public function frameErrorMessage(string $message = '')
