@@ -52,27 +52,21 @@ class DateValidator extends BaseValidator
             return false;
         }
 
-        if (! empty($this->maxDate) && ! empty($this->minDate)) {
-            if ($dateTime < $this->minDate || $dateTime > $this->maxDate) {
-                $this->setErrorMessage($field, 'between');
+        if (! empty($this->maxDate) && ! empty($this->minDate) && ($dateTime < $this->minDate || $dateTime > $this->maxDate)) {
+            $this->setErrorMessage($field, 'between');
 
-                return false;
-            }
+            return false;
         }
-        if (! empty($this->maxDate)) {
-            if ($dateTime > $this->maxDate) {
-                $this->setErrorMessage($field, 'max');
+        if (! empty($this->maxDate) && $dateTime > $this->maxDate) {
+            $this->setErrorMessage($field, 'max');
 
-                return false;
-            }
+            return false;
         }
 
-        if (! empty($this->minDate)) {
-            if ($dateTime < $this->minDate) {
-                $this->setErrorMessage($field, 'min');
+        if (! empty($this->minDate) && $dateTime < $this->minDate) {
+            $this->setErrorMessage($field, 'min');
 
-                return false;
-            }
+            return false;
         }
 
         return true;

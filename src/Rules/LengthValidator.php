@@ -40,35 +40,27 @@ class LengthValidator extends BaseValidator
         $data = $field->getData();
         $len = strlen($data);
 
-        if (! empty($this->exact)) {
-            if ($len != $this->exact) {
-                $this->setErrorMessage($field, 'exact');
+        if ((! empty($this->exact)) && $len != $this->exact) {
+            $this->setErrorMessage($field, 'exact');
 
-                return false;
-            }
+            return false;
         }
-        if (! empty($this->max) && ! empty($this->min)) {
-            if ($len < $this->min || $len > $this->max) {
-                $this->setErrorMessage($field, 'between');
+        if ((! empty($this->max)) && (! empty($this->min)) && ($len < $this->min || $len > $this->max)) {
+            $this->setErrorMessage($field, 'between');
 
-                return false;
-            }
+            return false;
         }
 
-        if (! empty($this->max)) {
-            if ($len > $this->max) {
-                $this->setErrorMessage($field, 'max');
+        if ((! empty($this->max)) && $len > $this->max) {
+            $this->setErrorMessage($field, 'max');
 
-                return false;
-            }
+            return false;
         }
 
-        if (! empty($this->min)) {
-            if ($len < $this->min) {
-                $this->setErrorMessage($field, 'min');
+        if ((! empty($this->min)) && $len < $this->min) {
+            $this->setErrorMessage($field, 'min');
 
-                return false;
-            }
+            return false;
         }
 
         return true;

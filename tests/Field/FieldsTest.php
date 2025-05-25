@@ -212,4 +212,13 @@ class FieldsTest extends TestCase
         $this->assertEquals($fields->getWarning(), 'warning1');
         $this->assertEquals($fields->getError(), 'error1');
     }
+
+    public function testGetFields()
+    {
+        $field1 = new Field('f1', '1');
+        $field2 = new Field('f2', '2');
+        $fields = new Fields([$field1, $field2]);
+
+        $this->assertEquals($fields->getFields(), [$field1->getName(), $field2->getName()]);
+    }
 }
