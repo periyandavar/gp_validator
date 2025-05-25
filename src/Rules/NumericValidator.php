@@ -41,27 +41,21 @@ class NumericValidator extends BaseValidator
 
             return false;
         }
-        if (! empty($this->max) && ! empty($this->min)) {
-            if ($data < $this->min || $data > $this->max) {
-                $this->setErrorMessage($field, 'between');
+        if ((! empty($this->max) && ! empty($this->min)) && ($data < $this->min || $data > $this->max)) {
+            $this->setErrorMessage($field, 'between');
 
-                return false;
-            }
+            return false;
         }
-        if (! empty($this->max)) {
-            if ($data > $this->max) {
-                $this->setErrorMessage($field, 'max');
+        if ((! empty($this->max)) && ($data > $this->max)) {
+            $this->setErrorMessage($field, 'max');
 
-                return false;
-            }
+            return false;
         }
 
-        if (! empty($this->min)) {
-            if ($data < $this->min) {
-                $this->setErrorMessage($field, 'min');
+        if ((! empty($this->min)) && ($data < $this->min)) {
+            $this->setErrorMessage($field, 'min');
 
-                return false;
-            }
+            return false;
         }
 
         return true;
