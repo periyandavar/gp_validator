@@ -6,6 +6,7 @@
 
 **Merged pull requests:**
 
+- fix: fix num validator [\#14](https://github.com/periyandavar/gp_validator/pull/14) ([periyandavar](https://github.com/periyandavar))
 - fix: fix workflow [\#13](https://github.com/periyandavar/gp_validator/pull/13) ([periyandavar](https://github.com/periyandavar))
 
 ## [1.0.5](https://github.com/periyandavar/gp_validator/tree/1.0.5) (2025-05-25)
