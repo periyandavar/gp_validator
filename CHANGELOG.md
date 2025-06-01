@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/periyandavar/gp_validator/tree/HEAD)
 
-[Full Changelog](https://github.com/periyandavar/gp_validator/compare/1.0.5...HEAD)
+[Full Changelog](https://github.com/periyandavar/gp_validator/compare/1.0.6...HEAD)
+
+**Merged pull requests:**
+
+- fix: fix fields class [\#15](https://github.com/periyandavar/gp_validator/pull/15) ([periyandavar](https://github.com/periyandavar))
+
+## [1.0.6](https://github.com/periyandavar/gp_validator/tree/1.0.6) (2025-06-01)
+
+[Full Changelog](https://github.com/periyandavar/gp_validator/compare/1.0.5...1.0.6)
 
 **Merged pull requests:**
 
