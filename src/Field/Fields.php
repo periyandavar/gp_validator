@@ -302,4 +302,9 @@ class Fields implements IteratorAggregate
     {
         return array_keys($this->fields);
     }
+
+    public function getField(string $key)
+    {
+        return $this->fields[$key] ?? null;
+    }
 }
