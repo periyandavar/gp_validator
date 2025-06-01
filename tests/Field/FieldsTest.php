@@ -43,6 +43,7 @@ class FieldsTest extends TestCase
         $fields = new Fields([$field1, $field2]);
 
         $values = $fields->getValues();
+        $this->assertSame($field2, $fields->getField('field2'));
         $this->assertEquals(['field1' => 'value1', 'field2' => 'value2'], $values);
     }
 
